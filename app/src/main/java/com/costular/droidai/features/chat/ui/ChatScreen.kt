@@ -67,6 +67,7 @@ fun ChatScreen(
         onStopGenerating = viewModel::onStopGenerating,
         onShowPickModel = viewModel::openModelPicker,
         onDismissPickModel = viewModel::dismissModelPicker,
+        onPickModel = viewModel::onPickModel
     )
 }
 
@@ -79,13 +80,16 @@ fun ChatScreen(
     onStopGenerating: () -> Unit,
     onShowPickModel: () -> Unit,
     onDismissPickModel: () -> Unit,
+    onPickModel: (Model) -> Unit,
 ) {
     val coroutineScope = rememberCoroutineScope()
 
-    if (state.showModelPicker) {
+    if (state.showModelPicker && state.selectedModel != null) {
         ModelPickerBottomSheet(
-            onPickModel = {},
-            onDismiss = onDismissPickModel
+            onPickModel = onPickModel,
+            onDismiss = onDismissPickModel,
+            models = state.availableModels,
+            selectedModel = state.selectedModel,
         )
     }
 
@@ -339,6 +343,7 @@ private fun ChatScreenPreview() {
             onStopGenerating = {},
             onShowPickModel = {},
             onDismissPickModel = {},
+            onPickModel = {},
         )
     }
 }

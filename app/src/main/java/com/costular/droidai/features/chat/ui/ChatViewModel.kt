@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.costular.droidai.features.chat.model.Message
 import com.costular.droidai.features.chat.model.MessageRole
+import com.costular.droidai.features.chat.model.Model
 import com.costular.droidai.features.chat.repository.ChatRepository
 import com.costular.droidai.features.chat.repository.ModelRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -60,7 +61,7 @@ class ChatViewModel @Inject constructor(
         _uiState.update { it.copy(isGenerating = false) }
     }
 
-    fun sendChat(message: String) {
+    private fun sendChat(message: String) {
         onStopGenerating()
         chatGeneration = viewModelScope.launch {
             val messagesWithLatestPrompt = _uiState.value.messages + Message(
@@ -76,7 +77,7 @@ class ChatViewModel @Inject constructor(
             }
 
             val response = chatRepository.chat(
-                model = "llama2",
+                model = uiState.value.selectedModel?.name ?: "llama2", // TODO: Handle fallback
                 messages = messagesWithLatestPrompt,
             )
 
@@ -91,5 +92,12 @@ class ChatViewModel @Inject constructor(
 
     fun dismissModelPicker() {
         _uiState.update { it.copy(showModelPicker = false) }
+    }
+
+    fun onPickModel(model: Model) {
+        _uiState.update { it.copy(
+            selectedModel = model,
+            showModelPicker = false
+        ) }
     }
 }
