@@ -71,6 +71,7 @@ dependencies {
     implementation(libs.ktor.client.serialization.json)
     implementation(libs.ktor.client.logging)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.lottie)
 
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.hilt.android)

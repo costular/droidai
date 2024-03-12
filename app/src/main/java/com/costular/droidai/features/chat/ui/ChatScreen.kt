@@ -1,6 +1,6 @@
 package com.costular.droidai.features.chat.ui
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -46,6 +46,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
+import com.costular.droidai.R
 import com.costular.droidai.features.chat.model.Message
 import com.costular.droidai.features.chat.model.MessageRole
 import com.costular.droidai.features.chat.model.Model
@@ -146,6 +152,7 @@ fun ChatScreen(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ChatScreenContent(
     lazyListState: LazyListState = rememberLazyListState(),
@@ -172,11 +179,18 @@ private fun ChatScreenContent(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 reverseLayout = true,
             ) {
+                if (state.isGenerating) {
+                    item("generating") {
+                        GenerationAnimation()
+                    }
+                }
+
                 items(state.messages.asReversed()) {
                     MessageItem(
                         content = it.content,
                         role = it.role,
-                        model = "Llama2" // TODO:
+                        model = "AI",
+                        modifier = Modifier.animateItemPlacement(),
                     )
                 }
             }
@@ -309,6 +323,23 @@ private fun UserInput(
             }
         }
     }
+}
+
+@Composable
+private fun GenerationAnimation(
+    modifier: Modifier = Modifier,
+) {
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.bubbles))
+    val progress by animateLottieCompositionAsState(
+        composition = composition,
+        iterations = LottieConstants.IterateForever,
+    )
+
+    LottieAnimation(
+        modifier = modifier,
+        composition = composition,
+        progress = { progress },
+    )
 }
 
 @Preview
