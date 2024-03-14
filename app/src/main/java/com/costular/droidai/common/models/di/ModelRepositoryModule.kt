@@ -1,7 +1,7 @@
-package com.costular.droidai.features.chat.di
+package com.costular.droidai.common.models.di
 
-import com.costular.droidai.features.chat.repository.ModelRepository
-import com.costular.droidai.features.chat.repository.ModelRepositoryImpl
+import com.costular.droidai.common.models.repository.ModelRepository
+import com.costular.droidai.common.models.repository.ModelRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

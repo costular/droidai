@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlinxSerialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.junit5)
 }
 
 android {
@@ -65,6 +66,9 @@ dependencies {
     implementation(libs.androidx.lifecycle.compose)
     implementation(libs.androidx.viewmodel)
     implementation(libs.androidx.material3.icons)
+    implementation(libs.androidx.dataStore.core)
+    implementation(libs.androidx.dataStore.preferences)
+    implementation(libs.kotlinx.coroutines)
 
     implementation(libs.ktor.client.okhttp)
     implementation(libs.ktor.client.contentNegotiation)
@@ -79,7 +83,13 @@ dependencies {
 
     implementation(libs.androidx.navigation.compose)
 
-    testImplementation(libs.junit)
+    testImplementation(libs.junit.jupiter.api)
+    testRuntimeOnly(libs.junit.jupiter.engine)
+    testImplementation(libs.junit.jupiter.params)
+    testImplementation(libs.mockk.android)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.truth)
+
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

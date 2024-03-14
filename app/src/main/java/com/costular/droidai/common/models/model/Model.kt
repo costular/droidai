@@ -1,4 +1,4 @@
-package com.costular.droidai.features.chat.model
+package com.costular.droidai.common.models.model
 
 import android.text.format.DateUtils
 import com.costular.droidai.util.toReadableFileSize

@@ -29,7 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.costular.droidai.features.chat.model.Model
+import com.costular.droidai.common.models.model.Model
 import com.costular.droidai.ui.theme.DroidAITheme
 import java.time.Instant
 

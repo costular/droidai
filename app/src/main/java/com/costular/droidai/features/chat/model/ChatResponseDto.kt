@@ -1,8 +1,6 @@
 package com.costular.droidai.features.chat.model
 
-import com.costular.droidai.network.InstantAsText
-import java.time.Instant
-import java.time.LocalDateTime
+import com.costular.droidai.core.network.InstantAsText
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

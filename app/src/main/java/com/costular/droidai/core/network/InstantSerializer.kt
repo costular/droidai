@@ -1,4 +1,4 @@
-package com.costular.droidai.network
+package com.costular.droidai.core.network
 
 import java.time.Instant
 import kotlinx.serialization.KSerializer

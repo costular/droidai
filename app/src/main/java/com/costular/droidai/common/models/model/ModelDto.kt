@@ -1,6 +1,6 @@
-package com.costular.droidai.features.chat.model
+package com.costular.droidai.common.models.model
 
-import com.costular.droidai.network.InstantAsText
+import com.costular.droidai.core.network.InstantAsText
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

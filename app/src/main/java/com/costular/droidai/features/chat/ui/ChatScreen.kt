@@ -54,7 +54,7 @@ import com.airbnb.lottie.compose.rememberLottieComposition
 import com.costular.droidai.R
 import com.costular.droidai.features.chat.model.Message
 import com.costular.droidai.features.chat.model.MessageRole
-import com.costular.droidai.features.chat.model.Model
+import com.costular.droidai.common.models.model.Model
 import com.costular.droidai.ui.theme.DroidAITheme
 import java.time.Instant
 import kotlinx.coroutines.CoroutineScope

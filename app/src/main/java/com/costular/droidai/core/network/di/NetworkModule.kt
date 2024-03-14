@@ -1,4 +1,4 @@
-package com.costular.droidai.network
+package com.costular.droidai.core.network.di
 
 import com.costular.droidai.core.network.HttpLogger
 import dagger.Module
@@ -31,6 +31,7 @@ interface NetworkModule {
         ): HttpClient = HttpClient(OkHttp) {
             install(HttpTimeout) {
                 requestTimeoutMillis = 30_000
+                socketTimeoutMillis = 30_000
             }
 
             install(ContentNegotiation) {

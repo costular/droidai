@@ -1,4 +1,4 @@
-package com.costular.droidai.features.chat.model
+package com.costular.droidai.common.models.model
 
 fun ModelDto.toDomain(): Model = Model(
     name = name,

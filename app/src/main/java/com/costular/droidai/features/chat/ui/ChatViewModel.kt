@@ -3,18 +3,22 @@ package com.costular.droidai.features.chat.ui
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.costular.droidai.common.models.model.Model
+import com.costular.droidai.common.models.repository.ModelRepository
+import com.costular.droidai.core.network.Dispatcher
+import com.costular.droidai.core.network.DroidAiDispatchers.Default
 import com.costular.droidai.features.chat.model.Message
 import com.costular.droidai.features.chat.model.MessageRole
-import com.costular.droidai.features.chat.model.Model
 import com.costular.droidai.features.chat.repository.ChatRepository
-import com.costular.droidai.features.chat.repository.ModelRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @HiltViewModel
 class ChatViewModel @Inject constructor(
@@ -37,8 +41,8 @@ class ChatViewModel @Inject constructor(
             _uiState.update {
                 it.copy(
                     availableModels = response,
-                    selectedModel = response.first()
-                ) // TODO: let user choose default model in settings but put a fallback when there's no one
+                    selectedModel = modelRepository.getDefaultModel(),
+                )
             }
         }
     }
@@ -76,8 +80,10 @@ class ChatViewModel @Inject constructor(
                 )
             }
 
+            val selectedModel = requireNotNull(uiState.value.selectedModel)
+
             val response = chatRepository.chat(
-                model = uiState.value.selectedModel?.name ?: "llama2", // TODO: Handle fallback
+                model = selectedModel.name,
                 messages = messagesWithLatestPrompt,
             )
 
@@ -95,9 +101,15 @@ class ChatViewModel @Inject constructor(
     }
 
     fun onPickModel(model: Model) {
-        _uiState.update { it.copy(
-            selectedModel = model,
-            showModelPicker = false
-        ) }
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    selectedModel = model,
+                    showModelPicker = false
+                )
+            }
+
+            modelRepository.setDefaultModel(model)
+        }
     }
 }
