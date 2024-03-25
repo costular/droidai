@@ -3,22 +3,19 @@ package com.costular.droidai.features.chat.ui
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.costular.droidai.common.models.model.GetModelError
 import com.costular.droidai.common.models.model.Model
 import com.costular.droidai.common.models.repository.ModelRepository
-import com.costular.droidai.core.network.Dispatcher
-import com.costular.droidai.core.network.DroidAiDispatchers.Default
 import com.costular.droidai.features.chat.model.Message
 import com.costular.droidai.features.chat.model.MessageRole
 import com.costular.droidai.features.chat.repository.ChatRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 @HiltViewModel
 class ChatViewModel @Inject constructor(
@@ -31,19 +28,28 @@ class ChatViewModel @Inject constructor(
     private val _uiState: MutableStateFlow<ChatUIState> = MutableStateFlow(ChatUIState())
     val uiState = _uiState.asStateFlow()
 
-    init {
-        loadModels()
-    }
-
     fun loadModels() {
         viewModelScope.launch {
-            val response = modelRepository.getModels()
-            _uiState.update {
-                it.copy(
-                    availableModels = response,
-                    selectedModel = modelRepository.getDefaultModel(),
-                )
-            }
+            modelRepository.getModels().fold(
+                ifLeft = { error ->
+                    when (error) {
+                        is GetModelError.ConnectionError -> {
+                            _uiState.update { it.copy(isErrorConnection = true) }
+                        }
+
+                        is GetModelError.UnknownError -> Unit // TODO:
+                    }
+                },
+                ifRight = { response ->
+                    _uiState.update {
+                        it.copy(
+                            availableModels = response,
+                            selectedModel = modelRepository.getDefaultModel(),
+                            isErrorConnection = false,
+                        )
+                    }
+                }
+            )
         }
     }
 

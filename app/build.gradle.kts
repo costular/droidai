@@ -82,6 +82,7 @@ dependencies {
     ksp(libs.hilt.compiler)
 
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.arrow.core)
 
     testImplementation(libs.junit.jupiter.api)
     testRuntimeOnly(libs.junit.jupiter.engine)

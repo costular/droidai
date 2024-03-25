@@ -3,6 +3,7 @@ package com.costular.droidai.features.chat.ui
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -22,6 +23,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -45,6 +47,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
@@ -52,10 +55,11 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.costular.droidai.R
+import com.costular.droidai.common.models.model.Model
 import com.costular.droidai.features.chat.model.Message
 import com.costular.droidai.features.chat.model.MessageRole
-import com.costular.droidai.common.models.model.Model
 import com.costular.droidai.ui.theme.DroidAITheme
+import com.costular.droidai.util.LifecycleObserver
 import java.time.Instant
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -65,6 +69,12 @@ fun ChatScreen(
     viewModel: ChatViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LifecycleObserver { _, event ->
+        if (event == Lifecycle.Event.ON_RESUME) {
+            viewModel.loadModels()
+        }
+    }
 
     ChatScreen(
         state = uiState,
@@ -167,32 +177,9 @@ private fun ChatScreenContent(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            LazyColumn(
-                state = lazyListState,
-                modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(
-                    start = 16.dp,
-                    end = 16.dp,
-                    bottom = 16.dp,
-                    top = 8.dp + padding.calculateTopPadding(),
-                ),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                reverseLayout = true,
-            ) {
-                if (state.isGenerating) {
-                    item("generating") {
-                        GenerationAnimation()
-                    }
-                }
-
-                items(state.messages.asReversed()) {
-                    MessageItem(
-                        content = it.content,
-                        role = it.role,
-                        model = "AI",
-                        modifier = Modifier.animateItemPlacement(),
-                    )
-                }
+            when {
+                state.isErrorConnection -> ConnectionError()
+                else -> MessageList(lazyListState, padding, state)
             }
 
             UserInput(
@@ -206,6 +193,72 @@ private fun ChatScreenContent(
                     onSubmit()
                 },
                 onStopGenerating = onStopGenerating,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ColumnScope.ConnectionError() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .weight(1f)
+            .padding(horizontal = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Text(
+            text = "Connection error",
+            style = MaterialTheme.typography.headlineSmall,
+        )
+
+        Spacer(Modifier.height(8.dp))
+
+        Text(
+            text = "It was impossible to connect with Ollama. Did you forget to set the URL? Try to update it on Settings",
+            style = MaterialTheme.typography.bodyLarge,
+        )
+
+        Spacer(Modifier.height(16.dp))
+
+        Button(onClick = { /*TODO*/ }) {
+            Text("Open Settings")
+        }
+    }
+}
+
+@Composable
+@OptIn(ExperimentalFoundationApi::class)
+private fun ColumnScope.MessageList(
+    lazyListState: LazyListState,
+    padding: PaddingValues,
+    state: ChatUIState
+) {
+    LazyColumn(
+        state = lazyListState,
+        modifier = Modifier.Companion.weight(1f),
+        contentPadding = PaddingValues(
+            start = 16.dp,
+            end = 16.dp,
+            bottom = 16.dp,
+            top = 8.dp + padding.calculateTopPadding(),
+        ),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        reverseLayout = true,
+    ) {
+        if (state.isGenerating) {
+            item("generating") {
+                GenerationAnimation()
+            }
+        }
+
+        items(state.messages.asReversed()) {
+            MessageItem(
+                content = it.content,
+                role = it.role,
+                model = "AI",
+                modifier = Modifier.animateItemPlacement(),
             )
         }
     }

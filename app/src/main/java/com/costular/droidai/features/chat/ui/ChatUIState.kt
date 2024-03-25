@@ -11,4 +11,5 @@ data class ChatUIState(
     val selectedModel: Model? = null,
     val availableModels: List<Model> = emptyList(),
     val showModelPicker: Boolean = false,
+    val isErrorConnection: Boolean = false,
 )
