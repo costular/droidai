@@ -23,21 +23,28 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -67,6 +74,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun ChatScreen(
     viewModel: ChatViewModel = hiltViewModel(),
+    navigateToSettings: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -83,7 +91,8 @@ fun ChatScreen(
         onStopGenerating = viewModel::onStopGenerating,
         onShowPickModel = viewModel::openModelPicker,
         onDismissPickModel = viewModel::dismissModelPicker,
-        onPickModel = viewModel::onPickModel
+        onPickModel = viewModel::onPickModel,
+        navigateToSettings = navigateToSettings,
     )
 }
 
@@ -97,8 +106,10 @@ fun ChatScreen(
     onShowPickModel: () -> Unit,
     onDismissPickModel: () -> Unit,
     onPickModel: (Model) -> Unit,
+    navigateToSettings: () -> Unit,
 ) {
     val coroutineScope = rememberCoroutineScope()
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
     if (state.showModelPicker && state.selectedModel != null) {
         ModelPickerBottomSheet(
@@ -109,60 +120,137 @@ fun ChatScreen(
         )
     }
 
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
-                ),
-                title = {
-                    state.selectedModel?.let { model ->
-                        SuggestionChip(
-                            onClick = onShowPickModel,
-                            label = {
-                                Text(model.name)
-                            },
-                            icon = {
-                                Icon(
-                                    imageVector = Icons.Default.ArrowDropDown,
-                                    contentDescription = null,
-                                )
-                            },
-                        )
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet {
+                DrawerContent(
+                    onClickSettings = {
+                        coroutineScope.launch {
+                            drawerState.close()
+                        }
+                        navigateToSettings()
+                    },
+                )
+            }
+        }
+    ) {
+        Scaffold(
+            topBar = {
+                AppBar(
+                    selectedModel = state.selectedModel,
+                    onShowPickModel = onShowPickModel,
+                    onOpenDrawer = {
+                        coroutineScope.launch {
+                            drawerState.open()
+                        }
                     }
-                },
-                navigationIcon = {
-                    IconButton(onClick = {}) {
-                        Icon(
-                            imageVector = Icons.Default.Menu,
-                            contentDescription = null
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = {}) {
-                        Icon(
-                            imageVector = Icons.Filled.Add,
-                            contentDescription = "Localized description"
-                        )
-                    }
-                }
+                )
+            },
+        ) { padding ->
+            ChatScreenContent(
+                padding = padding,
+                state = state,
+                onValueChange = onValueChange,
+                coroutineScope = coroutineScope,
+                onSubmit = onSubmit,
+                onStopGenerating = onStopGenerating,
+                navigateToSettings = navigateToSettings,
             )
-        },
-    ) { padding ->
-        ChatScreenContent(
-            padding = padding,
-            state = state,
-            onValueChange = onValueChange,
-            coroutineScope = coroutineScope,
-            onSubmit = onSubmit,
-            onStopGenerating = onStopGenerating,
-        )
+        }
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun DrawerContent(
+    onClickSettings: () -> Unit,
+) {
+    Column {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(0.85f),
+        ) {
+            items(count = 100) {
+                Text(
+                    text = "Conversation $it",
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+            }
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(0.15f)
+        ) {
+            HorizontalDivider(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+            )
+
+            NavigationDrawerItem(
+                icon = {
+                    Icon(imageVector = Icons.Outlined.Settings, contentDescription = null)
+                },
+                label = {
+                    Text("Settings")
+                },
+                selected = false,
+                onClick = onClickSettings,
+            )
+        }
+    }
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+private fun AppBar(
+    selectedModel: Model?,
+    onShowPickModel: () -> Unit,
+    onOpenDrawer: () -> Unit,
+) {
+    CenterAlignedTopAppBar(
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+        ),
+        title = {
+            selectedModel?.let { model ->
+                SuggestionChip(
+                    onClick = onShowPickModel,
+                    label = {
+                        Text(model.name)
+                    },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.ArrowDropDown,
+                            contentDescription = null,
+                        )
+                    },
+                )
+            }
+        },
+        navigationIcon = {
+            IconButton(onClick = onOpenDrawer) {
+                Icon(
+                    imageVector = Icons.Default.Menu,
+                    contentDescription = null
+                )
+            }
+        },
+        actions = {
+            IconButton(onClick = {}) {
+                Icon(
+                    imageVector = Icons.Filled.Add,
+                    contentDescription = "Localized description"
+                )
+            }
+        }
+    )
+}
+
 @Composable
 private fun ChatScreenContent(
     lazyListState: LazyListState = rememberLazyListState(),
@@ -171,14 +259,15 @@ private fun ChatScreenContent(
     onValueChange: (TextFieldValue) -> Unit,
     coroutineScope: CoroutineScope,
     onSubmit: () -> Unit,
-    onStopGenerating: () -> Unit
+    onStopGenerating: () -> Unit,
+    navigateToSettings: () -> Unit,
 ) {
     Surface {
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
             when {
-                state.isErrorConnection -> ConnectionError()
+                state.isErrorConnection -> ConnectionError(navigateToSettings)
                 else -> MessageList(lazyListState, padding, state)
             }
 
@@ -199,7 +288,9 @@ private fun ChatScreenContent(
 }
 
 @Composable
-private fun ColumnScope.ConnectionError() {
+private fun ColumnScope.ConnectionError(
+    navigateToSettings: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -222,7 +313,7 @@ private fun ColumnScope.ConnectionError() {
 
         Spacer(Modifier.height(16.dp))
 
-        Button(onClick = { /*TODO*/ }) {
+        Button(onClick = navigateToSettings) {
             Text("Open Settings")
         }
     }
@@ -329,7 +420,12 @@ private fun UserInput(
             modifier = Modifier.fillMaxWidth(),
         ) {
             Row(
-                modifier = Modifier.padding(16.dp),
+                modifier = Modifier.padding(
+                    start = 16.dp,
+                    end = 16.dp,
+                    bottom = 8.dp,
+                    top = 4.dp,
+                ),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 OutlinedTextField(
@@ -338,7 +434,6 @@ private fun UserInput(
                     modifier = Modifier.weight(1f),
                     maxLines = 5,
                     shape = RoundedCornerShape(percent = 20),
-                    enabled = !generating,
                     placeholder = {
                         Text("Write a message")
                     }
@@ -428,6 +523,7 @@ private fun ChatScreenPreview() {
             onShowPickModel = {},
             onDismissPickModel = {},
             onPickModel = {},
+            navigateToSettings = {},
         )
     }
 }

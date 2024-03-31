@@ -9,10 +9,14 @@ const val CHAT_ROUTE = "chat"
 
 fun NavController.navigateToChat(navOptions: NavOptions) = navigate(CHAT_ROUTE, navOptions)
 
-fun NavGraphBuilder.chatScreen() {
+fun NavGraphBuilder.chatScreen(
+    navigateToSettings: () -> Unit,
+) {
     composable(
         route = CHAT_ROUTE,
     ) {
-        ChatScreen()
+        ChatScreen(
+            navigateToSettings = navigateToSettings,
+        )
     }
 }
